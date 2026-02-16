@@ -74,9 +74,7 @@ class TabItem:
         tab.updated_at = item.get("updated_at", tab.updated_at)
         return tab
 
-    def to_dict(
-        self, include_tags: bool = False, tags: list[str] | None = None
-    ) -> dict[str, Any]:
+    def to_dict(self, include_tags: bool = False, tags: list[str] | None = None) -> dict[str, Any]:
         """Convert to API response format"""
         response = {
             "id": self.tab_id,
