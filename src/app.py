@@ -15,11 +15,12 @@ app = Flask(__name__)
 # CONFIGURATION
 # ============================================================
 
-AWS_REGION = "us-east-1"
-DYNAMODB_TABLE = "TabManager"
+import os
+
+DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "TabManager")
 
 # Initialize DynamoDB client
-dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(DYNAMODB_TABLE)
 
 
