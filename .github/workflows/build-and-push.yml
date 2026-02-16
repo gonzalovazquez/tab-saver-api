@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  REPOSITORY: tab-manager-api
+  REPOSITORY: tab-saver-api
   IMAGE_TAG: ${{ github.sha }}
 
 permissions:
