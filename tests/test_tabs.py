@@ -201,9 +201,7 @@ class TestDynamoDBOperations:
             tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
             table.put_item(Item=tab.to_dynamodb_item())
 
-            response = table.get_item(
-                Key={"entity_type": "tab", "id": "1"}
-            )
+            response = table.get_item(Key={"entity_type": "tab", "id": "1"})
             assert "Item" in response
             assert response["Item"]["url"] == "https://github.com"
 
@@ -367,9 +365,7 @@ class TestDynamoDBOperations:
             }
             table.put_item(Item=item)
 
-            response = table.get_item(
-                Key={"entity_type": "tab_tag", "id": "1#1"}
-            )
+            response = table.get_item(Key={"entity_type": "tab_tag", "id": "1#1"})
             assert "Item" in response
             assert response["Item"]["tab_id"] == "1"
 
@@ -422,9 +418,8 @@ class TestFlaskEndpoints:
 
     def test_get_tabs_endpoint(self, client):
         """Test getting all tabs"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -437,9 +432,8 @@ class TestFlaskEndpoints:
 
     def test_get_tabs_archived(self, client):
         """Test getting archived tabs"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub", is_archived=1)
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -452,9 +446,8 @@ class TestFlaskEndpoints:
 
     def test_get_single_tab(self, client):
         """Test getting a single tab"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -473,9 +466,8 @@ class TestFlaskEndpoints:
 
     def test_delete_tab(self, client):
         """Test deleting a tab"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -492,9 +484,8 @@ class TestFlaskEndpoints:
 
     def test_archive_tab(self, client):
         """Test archiving a tab"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -510,9 +501,8 @@ class TestFlaskEndpoints:
 
     def test_unarchive_tab(self, client):
         """Test unarchiving a tab"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub", is_archived=1)
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -537,9 +527,8 @@ class TestFlaskEndpoints:
 
     def test_get_stats(self, client):
         """Test getting statistics"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -572,9 +561,8 @@ class TestTagEndpoints:
 
     def test_add_tag_to_tab(self, client):
         """Test adding a tag to a tab"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -600,9 +588,8 @@ class TestTagEndpoints:
 
     def test_add_empty_tag(self, client):
         """Test adding an empty tag fails"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -616,9 +603,8 @@ class TestTagEndpoints:
 
     def test_add_existing_tag_to_tab(self, client):
         """Test adding a tag that already exists reuses it"""
-        from src.app import TabItem, TagItem
-
         import src.app as app_module
+        from src.app import TabItem, TagItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -635,9 +621,8 @@ class TestTagEndpoints:
 
     def test_remove_tag_from_tab(self, client):
         """Test removing a tag from a tab"""
-        from src.app import TabItem, TagItem
-
         import src.app as app_module
+        from src.app import TabItem, TagItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -645,13 +630,15 @@ class TestTagEndpoints:
         tag = TagItem(tag_id="tag-1", name="Development")
         app_module.table.put_item(Item=tag.to_dynamodb_item())
 
-        app_module.table.put_item(Item={
-            "entity_type": "tab_tag",
-            "id": "1#tag-1",
-            "tab_id": "1",
-            "tag_id": "tag-1",
-            "created_at": "2026-01-01T00:00:00Z",
-        })
+        app_module.table.put_item(
+            Item={
+                "entity_type": "tab_tag",
+                "id": "1#tag-1",
+                "tab_id": "1",
+                "tag_id": "tag-1",
+                "created_at": "2026-01-01T00:00:00Z",
+            }
+        )
 
         response = client.delete("/api/tabs/1/tags/Development")
         assert response.status_code == 200
@@ -665,9 +652,8 @@ class TestTagEndpoints:
 
     def test_get_tags_after_adding(self, client):
         """Test getting tags after adding one"""
-        from src.app import TagItem
-
         import src.app as app_module
+        from src.app import TagItem
 
         tag = TagItem(tag_id="tag-1", name="Development")
         app_module.table.put_item(Item=tag.to_dynamodb_item())
@@ -680,9 +666,8 @@ class TestTagEndpoints:
 
     def test_get_single_tab_with_tags(self, client):
         """Test getting a single tab includes its tags"""
-        from src.app import TabItem, TagItem
-
         import src.app as app_module
+        from src.app import TabItem, TagItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -690,13 +675,15 @@ class TestTagEndpoints:
         tag = TagItem(tag_id="tag-1", name="Development")
         app_module.table.put_item(Item=tag.to_dynamodb_item())
 
-        app_module.table.put_item(Item={
-            "entity_type": "tab_tag",
-            "id": "1#tag-1",
-            "tab_id": "1",
-            "tag_id": "tag-1",
-            "created_at": "2026-01-01T00:00:00Z",
-        })
+        app_module.table.put_item(
+            Item={
+                "entity_type": "tab_tag",
+                "id": "1#tag-1",
+                "tab_id": "1",
+                "tag_id": "tag-1",
+                "created_at": "2026-01-01T00:00:00Z",
+            }
+        )
 
         response = client.get("/api/tabs/1")
         assert response.status_code == 200
@@ -720,9 +707,8 @@ class TestSearchEndpoints:
 
     def test_search_by_name(self, client):
         """Test searching tabs by name"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -735,9 +721,8 @@ class TestSearchEndpoints:
 
     def test_search_by_tag(self, client):
         """Test searching tabs by tag"""
-        from src.app import TabItem, TagItem
-
         import src.app as app_module
+        from src.app import TabItem, TagItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())
@@ -745,13 +730,15 @@ class TestSearchEndpoints:
         tag = TagItem(tag_id="tag-1", name="development")
         app_module.table.put_item(Item=tag.to_dynamodb_item())
 
-        app_module.table.put_item(Item={
-            "entity_type": "tab_tag",
-            "id": "1#tag-1",
-            "tab_id": "1",
-            "tag_id": "tag-1",
-            "created_at": "2026-01-01T00:00:00Z",
-        })
+        app_module.table.put_item(
+            Item={
+                "entity_type": "tab_tag",
+                "id": "1#tag-1",
+                "tab_id": "1",
+                "tag_id": "tag-1",
+                "created_at": "2026-01-01T00:00:00Z",
+            }
+        )
 
         response = client.get("/api/search?q=dev&type=tag")
         assert response.status_code == 200
@@ -760,9 +747,8 @@ class TestSearchEndpoints:
 
     def test_search_all(self, client):
         """Test searching tabs with type=all"""
-        from src.app import TabItem
-
         import src.app as app_module
+        from src.app import TabItem
 
         tab = TabItem(tab_id="1", url="https://github.com", title="GitHub")
         app_module.table.put_item(Item=tab.to_dynamodb_item())

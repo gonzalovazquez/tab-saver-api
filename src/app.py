@@ -4,7 +4,7 @@ Flask application for AWS Lambda + DynamoDB
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import boto3
 from flask import Flask, jsonify, request
@@ -36,7 +36,7 @@ class TabItem:
         tab_id: str,
         url: str,
         title: str,
-        notes: Optional[str] = None,
+        notes: str | None = None,
         is_archived: int = 0,
     ):
         self.tab_id = tab_id
@@ -47,7 +47,7 @@ class TabItem:
         self.created_at = datetime.utcnow().isoformat() + "Z"
         self.updated_at = self.created_at
 
-    def to_dynamodb_item(self) -> Dict[str, Any]:
+    def to_dynamodb_item(self) -> dict[str, Any]:
         """Convert to DynamoDB item format"""
         return {
             "entity_type": "tab",
@@ -61,7 +61,7 @@ class TabItem:
         }
 
     @staticmethod
-    def from_dynamodb_item(item: Dict[str, Any]) -> "TabItem":
+    def from_dynamodb_item(item: dict[str, Any]) -> "TabItem":
         """Create from DynamoDB item"""
         tab = TabItem(
             tab_id=item["id"],
@@ -74,7 +74,9 @@ class TabItem:
         tab.updated_at = item.get("updated_at", tab.updated_at)
         return tab
 
-    def to_dict(self, include_tags: bool = False, tags: Optional[List[str]] = None) -> Dict[str, Any]:
+    def to_dict(
+        self, include_tags: bool = False, tags: list[str] | None = None
+    ) -> dict[str, Any]:
         """Convert to API response format"""
         response = {
             "id": self.tab_id,
@@ -98,7 +100,7 @@ class TagItem:
         self.name = name
         self.created_at = datetime.utcnow().isoformat() + "Z"
 
-    def to_dynamodb_item(self) -> Dict[str, Any]:
+    def to_dynamodb_item(self) -> dict[str, Any]:
         """Convert to DynamoDB item format"""
         return {
             "entity_type": "tag",
@@ -108,13 +110,13 @@ class TagItem:
         }
 
     @staticmethod
-    def from_dynamodb_item(item: Dict[str, Any]) -> "TagItem":
+    def from_dynamodb_item(item: dict[str, Any]) -> "TagItem":
         """Create from DynamoDB item"""
         tag = TagItem(tag_id=item["id"], name=item["name"])
         tag.created_at = item.get("created_at", tag.created_at)
         return tag
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API response format"""
         return {"id": self.tag_id, "name": self.name}
 
@@ -137,7 +139,7 @@ def save_tab(tab: TabItem) -> None:
     table.put_item(Item=tab.to_dynamodb_item())
 
 
-def get_tab(tab_id: str) -> Optional[TabItem]:
+def get_tab(tab_id: str) -> TabItem | None:
     """Get tab from DynamoDB"""
     response = table.get_item(Key={"entity_type": "tab", "id": tab_id})
     if "Item" in response:
@@ -145,7 +147,7 @@ def get_tab(tab_id: str) -> Optional[TabItem]:
     return None
 
 
-def get_all_tabs(archived: bool = False) -> List[TabItem]:
+def get_all_tabs(archived: bool = False) -> list[TabItem]:
     """Get all tabs from DynamoDB"""
     response = table.query(
         KeyConditionExpression="entity_type = :et",
@@ -190,7 +192,7 @@ def save_tag(tag: TagItem) -> None:
     table.put_item(Item=tag.to_dynamodb_item())
 
 
-def get_tag_by_name(tag_name: str) -> Optional[TagItem]:
+def get_tag_by_name(tag_name: str) -> TagItem | None:
     """Get tag by name (scan - not ideal for production)"""
     response = table.scan(
         FilterExpression="entity_type = :et AND #name = :name",
@@ -203,7 +205,7 @@ def get_tag_by_name(tag_name: str) -> Optional[TagItem]:
     return None
 
 
-def get_all_tags() -> List[TagItem]:
+def get_all_tags() -> list[TagItem]:
     """Get all tags from DynamoDB"""
     response = table.query(
         KeyConditionExpression="entity_type = :et",
@@ -230,7 +232,7 @@ def remove_tab_tag(tab_id: str, tag_id: str) -> None:
     table.delete_item(Key={"entity_type": "tab_tag", "id": f"{tab_id}#{tag_id}"})
 
 
-def get_tabs_by_tag(tag_id: str) -> List[str]:
+def get_tabs_by_tag(tag_id: str) -> list[str]:
     """Get all tab IDs associated with a tag"""
     response = table.scan(
         FilterExpression="entity_type = :et AND tag_id = :tid",
@@ -239,7 +241,7 @@ def get_tabs_by_tag(tag_id: str) -> List[str]:
     return [item["tab_id"] for item in response.get("Items", [])]
 
 
-def get_tab_tags(tab_id: str) -> List[str]:
+def get_tab_tags(tab_id: str) -> list[str]:
     """Get all tag IDs associated with a tab"""
     response = table.query(
         KeyConditionExpression="entity_type = :et AND begins_with(id, :pk)",
@@ -254,7 +256,7 @@ def get_tab_tags(tab_id: str) -> List[str]:
 
 
 @app.route("/api/tabs", methods=["POST"])
-def save_tab_route() -> Tuple[str, int]:
+def save_tab_route() -> tuple[str, int]:
     """Save a new tab"""
     try:
         data = request.get_json()
@@ -277,7 +279,7 @@ def save_tab_route() -> Tuple[str, int]:
 
 
 @app.route("/api/tabs", methods=["GET"])
-def get_tabs_route() -> Tuple[str, int]:
+def get_tabs_route() -> tuple[str, int]:
     """Get all tabs"""
     try:
         archived = request.args.get("archived", "false").lower() == "true"
@@ -289,7 +291,7 @@ def get_tabs_route() -> Tuple[str, int]:
 
 
 @app.route("/api/tabs/<tab_id>", methods=["GET"])
-def get_tab_route(tab_id: str) -> Tuple[str, int]:
+def get_tab_route(tab_id: str) -> tuple[str, int]:
     """Get a single tab with its tags"""
     try:
         tab = get_tab(tab_id)
@@ -310,7 +312,7 @@ def get_tab_route(tab_id: str) -> Tuple[str, int]:
 
 
 @app.route("/api/tabs/<tab_id>", methods=["DELETE"])
-def delete_tab_route(tab_id: str) -> Tuple[str, int]:
+def delete_tab_route(tab_id: str) -> tuple[str, int]:
     """Delete a tab"""
     try:
         if not get_tab(tab_id):
@@ -323,7 +325,7 @@ def delete_tab_route(tab_id: str) -> Tuple[str, int]:
 
 
 @app.route("/api/tabs/<tab_id>/archive", methods=["PUT"])
-def archive_tab_route(tab_id: str) -> Tuple[str, int]:
+def archive_tab_route(tab_id: str) -> tuple[str, int]:
     """Archive or unarchive a tab"""
     try:
         if not get_tab(tab_id):
@@ -344,7 +346,7 @@ def archive_tab_route(tab_id: str) -> Tuple[str, int]:
 
 
 @app.route("/api/tags", methods=["GET"])
-def get_tags_route() -> Tuple[str, int]:
+def get_tags_route() -> tuple[str, int]:
     """Get all tags"""
     try:
         tags = get_all_tags()
@@ -355,7 +357,7 @@ def get_tags_route() -> Tuple[str, int]:
 
 
 @app.route("/api/tabs/<tab_id>/tags", methods=["POST"])
-def add_tag_route(tab_id: str) -> Tuple[str, int]:
+def add_tag_route(tab_id: str) -> tuple[str, int]:
     """Add a tag to a tab"""
     try:
         if not get_tab(tab_id):
@@ -385,7 +387,7 @@ def add_tag_route(tab_id: str) -> Tuple[str, int]:
 
 
 @app.route("/api/tabs/<tab_id>/tags/<tag_name>", methods=["DELETE"])
-def remove_tag_route(tab_id: str, tag_name: str) -> Tuple[str, int]:
+def remove_tag_route(tab_id: str, tag_name: str) -> tuple[str, int]:
     """Remove a tag from a tab"""
     try:
         if not get_tab(tab_id):
@@ -406,7 +408,7 @@ def remove_tag_route(tab_id: str, tag_name: str) -> Tuple[str, int]:
 
 
 @app.route("/api/search", methods=["GET"])
-def search_tabs_route() -> Tuple[str, int]:
+def search_tabs_route() -> tuple[str, int]:
     """Search tabs by name, URL, or tag"""
     try:
         q = request.args.get("q", "").strip().lower()
@@ -427,9 +429,7 @@ def search_tabs_route() -> Tuple[str, int]:
         elif search_type == "tag":
             # Search by tag
             tags = get_all_tags()
-            matching_tag_ids = [
-                t.tag_id for t in tags if q in t.name.lower()
-            ]
+            matching_tag_ids = [t.tag_id for t in tags if q in t.name.lower()]
             matching_tab_ids = set()
             for tag_id in matching_tag_ids:
                 matching_tab_ids.update(get_tabs_by_tag(tag_id))
@@ -446,9 +446,7 @@ def search_tabs_route() -> Tuple[str, int]:
 
             # Search by tag
             tags = get_all_tags()
-            matching_tag_ids = [
-                t.tag_id for t in tags if q in t.name.lower()
-            ]
+            matching_tag_ids = [t.tag_id for t in tags if q in t.name.lower()]
             for tag_id in matching_tag_ids:
                 matching_tabs.update(get_tabs_by_tag(tag_id))
 
@@ -479,7 +477,7 @@ def search_tabs_route() -> Tuple[str, int]:
 
 
 @app.route("/api/stats", methods=["GET"])
-def get_stats_route() -> Tuple[str, int]:
+def get_stats_route() -> tuple[str, int]:
     """Get statistics"""
     try:
         active_tabs = get_all_tabs(archived=False)
@@ -506,7 +504,7 @@ def get_stats_route() -> Tuple[str, int]:
 
 
 @app.route("/api/health", methods=["GET"])
-def health_check() -> Tuple[str, int]:
+def health_check() -> tuple[str, int]:
     """Health check endpoint"""
     try:
         active_tabs = get_all_tabs(archived=False)
@@ -530,7 +528,7 @@ def health_check() -> Tuple[str, int]:
 
 
 @app.route("/", methods=["GET"])
-def index() -> Tuple[str, int]:
+def index() -> tuple[str, int]:
     """API documentation"""
     return (
         jsonify(

@@ -16,33 +16,22 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.13'
       
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
       
-      - name: Create virtual environment
-        run: uv venv
-      
       - name: Install dependencies
-        run: |
-          . .venv/bin/activate
-          uv sync
+        run: uv sync --all-extras
       
       - name: Format check with black
-        run: |
-          . .venv/bin/activate
-          black --check src/ tests/
+        run: uv run black --check src/ tests/
       
       - name: Lint with ruff
-        run: |
-          . .venv/bin/activate
-          ruff check src/ tests/
+        run: uv run ruff check src/ tests/
       
       - name: Run unit tests with coverage
-        run: |
-          . .venv/bin/activate
-          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
+        run: uv run pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing --cov-fail-under=80
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -63,21 +52,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.13'
       
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
       
-      - name: Create virtual environment
-        run: uv venv
-      
       - name: Install dependencies
-        run: |
-          . .venv/bin/activate
-          uv sync
+        run: uv sync --all-extras
       
       - name: Build application
         run: |
-          . .venv/bin/activate
-          # Add any build steps here
-          echo "Build successful"
+          echo "✅ Build successful"
+          echo "All tests passed and code quality checks passed"
