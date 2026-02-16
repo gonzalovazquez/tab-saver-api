@@ -86,9 +86,21 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          echo "✅ Image pushed successfully!"
-          echo "Image URI: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
-          echo "Latest URI: $REGISTRY/$REPOSITORY:latest"
+          echo "## Build and Push Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ECR Image" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image URI:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`$REGISTRY/$REPOSITORY:$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Latest URI:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`$REGISTRY/$REPOSITORY:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Usage" >> $GITHUB_STEP_SUMMARY
+          echo "Use this URI in the **Bootstrap Infrastructure** workflow:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "$REGISTRY/$REPOSITORY:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   notify:
     needs: build-and-push
