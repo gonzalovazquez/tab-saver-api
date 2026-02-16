@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  REPOSITORY: tab-saver-api
+  REPOSITORY: tab-manager-api
   IMAGE_TAG: ${{ github.sha }}
 
 permissions:
@@ -30,28 +30,17 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
       
-      - name: Create virtual environment
-        run: uv venv
-      
       - name: Install dependencies
-        run: |
-          . .venv/bin/activate
-          uv sync
+        run: uv sync --all-extras
       
       - name: Format check with black
-        run: |
-          . .venv/bin/activate
-          black --check src/ tests/
+        run: uv run black --check src/ tests/
       
       - name: Lint with ruff
-        run: |
-          . .venv/bin/activate
-          ruff check src/ tests/
+        run: uv run ruff check src/ tests/
       
       - name: Run unit tests with coverage
-        run: |
-          . .venv/bin/activate
-          pytest tests/ -v --cov=src --cov-report=xml --cov-fail-under=80
+        run: uv run pytest tests/ -v --cov=src --cov-report=xml --cov-fail-under=80
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -98,21 +87,9 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          echo "Image pushed successfully!"
+          echo "✅ Image pushed successfully!"
           echo "Image URI: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
           echo "Latest URI: $REGISTRY/$REPOSITORY:latest"
-      
-      - name: Update Lambda function (optional)
-        if: success()
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          # Optional: Update Lambda function with new image
-          # Uncomment when ready to auto-deploy
-          # aws lambda update-function-code \
-          #   --function-name tab-manager-api \
-          #   --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
-          echo "Lambda update step - uncomment when ready to auto-deploy"
 
   notify:
     needs: build-and-push
