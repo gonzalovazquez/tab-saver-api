@@ -3,6 +3,7 @@ Tab Manager Real API
 Flask application for AWS Lambda + DynamoDB
 """
 
+import os
 from datetime import datetime
 from typing import Any
 
@@ -14,8 +15,6 @@ app = Flask(__name__)
 # ============================================================
 # CONFIGURATION
 # ============================================================
-
-import os
 
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "TabManager")
 
