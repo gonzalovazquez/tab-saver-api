@@ -1,4 +1,4 @@
-# Tab Saver API
+# tab-saver-api
 
 A production REST API for managing browser tabs, built with Flask and backed by AWS DynamoDB. Designed to run on AWS Lambda via API Gateway proxy integration.
 
@@ -46,7 +46,7 @@ A production REST API for managing browser tabs, built with Flask and backed by 
 ### Install dependencies
 
 ```bash
-uv sync --all-extras
+uv sync
 ```
 
 ### Run locally
@@ -186,7 +186,7 @@ Tests are configured to enforce **80% minimum coverage**.
 ## Project Structure
 
 ```
-TabSaverAPI/
+tab-saver-api/
 ├── src/
 │   └── app.py               # Flask application, models, routes, and Lambda handler
 ├── tests/
@@ -229,9 +229,37 @@ docker build -t tab-saver-api .
 docker run -p 5000:5000 tab-saver-api
 ```
 
+### Test image from ECR
+
+First, login to ECR:
+
+```bash
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 366579856667.dkr.ecr.us-east-1.amazonaws.com
+```
+
+Replace `366579856667` with your AWS Account ID, or use this command to get it automatically:
+
+```bash
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
+```
+
+Then pull and run the image:
+
+```bash
+docker pull 366579856667.dkr.ecr.us-east-1.amazonaws.com/tab-saver-api:latest
+docker run -p 5000:5000 366579856667.dkr.ecr.us-east-1.amazonaws.com/tab-saver-api:latest
+```
+
 ### Push to AWS ECR
 
-See [GitHub Actions ECR Setup Guide](docs/GitHub_Actions_ECR_Setup_Guide.md) for automated builds and pushes.
+See [GitHub Actions ECR Setup Guide](docs/GitHub_Actions_ECR_Setup_Guide.md) for complete prerequisites and automated builds/pushes.
+
+**Quick summary:**
+1. Create ECR repository
+2. Create IAM role with OIDC trust
+3. Add `AWS_ROLE_ARN` secret to GitHub
+4. Push to main branch
+5. GitHub Actions automatically builds and pushes to ECR
 
 ## GitHub Actions
 
@@ -322,7 +350,7 @@ uv run black src/ tests/
 ### "ModuleNotFoundError: No module named 'src'"
 ```bash
 # Make sure you're in the project root
-cd TabSaverAPI
+cd tab-saver-api
 
 # And using uv run
 uv run pytest tests/
