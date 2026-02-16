@@ -564,20 +564,18 @@ def lambda_handler(event, context):
     http_context = event.get("requestContext", {}).get("http", {})
     path = http_context.get("path", event.get("rawPath", "/"))
     method = http_context.get("method", event.get("requestMethod", "GET"))
-    body = event.get("body", "")
+    body = event.get("body", "") or ""
     headers = event.get("headers", {})
-
-    # Include query string parameters
     query_string = event.get("rawQueryString", "")
 
-    with app.test_request_context(
-        path=path,
-        method=method,
-        data=body,
-        headers=headers,
-        query_string=query_string,
-    ):
-        response = app.full_dispatch_request()
+    with app.test_client() as client:
+        response = client.open(
+            path,
+            method=method,
+            data=body,
+            headers=headers,
+            query_string=query_string,
+        )
         return {
             "statusCode": response.status_code,
             "body": response.get_data(as_text=True),
