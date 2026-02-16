@@ -559,12 +559,23 @@ def index() -> tuple[str, int]:
 
 
 def lambda_handler(event, context):
-    """AWS Lambda handler for API Gateway proxy integration"""
+    """AWS Lambda handler for API Gateway v2 (HTTP API) proxy integration"""
+    # API Gateway v2 payload format 2.0
+    http_context = event.get("requestContext", {}).get("http", {})
+    path = http_context.get("path", event.get("rawPath", "/"))
+    method = http_context.get("method", event.get("requestMethod", "GET"))
+    body = event.get("body", "")
+    headers = event.get("headers", {})
+
+    # Include query string parameters
+    query_string = event.get("rawQueryString", "")
+
     with app.test_request_context(
-        path=event.get("path", "/"),
-        method=event.get("httpMethod", "GET"),
-        data=event.get("body", ""),
-        headers=event.get("headers", {}),
+        path=path,
+        method=method,
+        data=body,
+        headers=headers,
+        query_string=query_string,
     ):
         response = app.full_dispatch_request()
         return {
